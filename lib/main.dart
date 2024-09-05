@@ -1,4 +1,8 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:lista_tarefas/models/task.dart';
+import 'package:lista_tarefas/screens/task_form_page.dart';
 import 'package:lista_tarefas/widgets/task_widget.dart';
 
 void main() {
@@ -32,11 +36,37 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  List<Task> _tasks = [];
 
-  void _incrementCounter() {
+  @override
+  void initState() {
+    super.initState();
+    _tasks = [
+      Task(0, "Comprar Pão", "Mercado do seu Jorge"),
+      Task(1, "Finalizar projeto", "Entrega dia 99/99/99"),
+      Task(2, "Judo", "Levar a galinha no Judo", isCompleted: true)
+    ];
+
+    log(_tasks.toString());
+  }
+
+  void _newTask({required id, required title, required description}) {
     setState(() {
-      _counter++;
+      _tasks.add(Task(id, title, description));
+    });
+  }
+
+  void _removeTask({required task}) {
+    setState(() {
+      _tasks.remove(task);
+    });
+  }
+
+  void _toggleTask({required task, required check}) {
+    int index = _tasks.indexOf(task);
+
+    setState(() {
+      _tasks[index].isCompleted = check;
     });
   }
 
@@ -47,23 +77,57 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            TaskWidget(),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
+      body: Column(
+        children: [
+          const Row(
+            children: [
+              Text("A fazer:",
+                  textAlign: TextAlign.start,
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          ListView(
+              shrinkWrap: true,
+              children: _tasks
+                  .where((task) => !task.isCompleted)
+                  .map((task) => TaskWidget(
+                      title: task.title,
+                      description: task.description,
+                      isChecked: task.isCompleted,
+                      toggleTask: (check) =>
+                          _toggleTask(task: task, check: check),
+                      removeTask: () => _removeTask(task: task)))
+                  .toList()),
+          const Row(
+            children: [
+              Text(
+                "Concluidos:",
+                textAlign: TextAlign.start,
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          ListView(
+              shrinkWrap: true,
+              children: _tasks
+                  .where((task) => task.isCompleted)
+                  .map((task) => TaskWidget(
+                      title: task.title,
+                      description: task.description,
+                      isChecked: task.isCompleted,
+                      toggleTask: (check) =>
+                          _toggleTask(task: task, check: check),
+                      removeTask: () => _removeTask(task: task)))
+                  .toList()),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TaskFormPage(saveTask: _newTask),
+          ),
+        ),
         tooltip: 'Increment',
         child: const Icon(Icons.add),
       ),
