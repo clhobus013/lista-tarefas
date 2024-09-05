@@ -4,5 +4,5 @@ class Task {
   String description;
   bool isCompleted;
 
-  Task(this.id, this.title, this.description, this.isCompleted);
+  Task(this.id, this.title, this.description, {this.isCompleted = false});
 }
